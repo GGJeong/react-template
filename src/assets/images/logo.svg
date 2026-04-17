@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="40" viewBox="0 0 120 40">
+  <rect width="36" height="36" x="2" y="2" rx="8" fill="#4f46e5"/>
+  <text x="20" y="26" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="bold" fill="#ffffff">
+    A
+  </text>
+  <text x="70" y="26" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="700" fill="#1e293b">
+    Admin
+  </text>
+</svg>
