@@ -4,4 +4,5 @@ export const ROUTES = {
   USERS: "/users",
   ORDERS: "/orders",
   SETTINGS: "/settings",
+  MQTT: "/mqtt",
 } as const;

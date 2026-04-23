@@ -1,16 +1,22 @@
-import React, { useState } from "react";
+import React from "react";
 import { ROUTES } from "../../constants/routes";
+
+type Route = typeof ROUTES[keyof typeof ROUTES];
+
+interface SidebarProps {
+  active: Route;
+  onNavigate: (path: Route) => void;
+}
 
 const navItems = [
   { label: "대시보드", icon: "📊", path: ROUTES.DASHBOARD },
   { label: "주문 관리", icon: "📦", path: ROUTES.ORDERS },
   { label: "회원 관리", icon: "👤", path: ROUTES.USERS },
-  { label: "설정", icon: "⚙️", path: ROUTES.SETTINGS },
+  { label: "MQTT",    icon: "📡", path: ROUTES.MQTT },
+  { label: "설정",    icon: "⚙️", path: ROUTES.SETTINGS },
 ];
 
-const Sidebar: React.FC = () => {
-  const [active, setActive] = useState(ROUTES.DASHBOARD);
-
+const Sidebar: React.FC<SidebarProps> = ({ active, onNavigate }) => {
   return (
     <aside
       style={{
@@ -36,7 +42,7 @@ const Sidebar: React.FC = () => {
         {navItems.map((item) => (
           <button
             key={item.path}
-            onClick={() => setActive(item.path)}
+            onClick={() => onNavigate(item.path)}
             style={{
               width: "100%",
               display: "flex",
