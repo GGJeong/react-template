@@ -1,4 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { LogEntry } from "../types";
+import MqttStats from "../components/MqttStats";
+import MqttConnection from "../components/MqttConnection";
+import MqttSubscribe from "../components/MqttSubscribe";
+import MqttPublish from "../components/MqttPublish";
+import MqttMessageLog from "../components/MqttMessageLog";
 
 declare global {
   interface Window {
@@ -119,14 +125,6 @@ function loadMqttScript(): Promise<void> {
   });
 }
 
-interface LogEntry {
-  id: number;
-  type: "received" | "sent" | "system";
-  topic: string;
-  payload: string;
-  time: string;
-}
-
 export default function MqttPage() {
   const [broker,     setBroker]     = useState(DEFAULT_BROKER);
   const [clientId,   setClientId]   = useState(CLIENT_ID);
@@ -138,11 +136,9 @@ export default function MqttPage() {
   const [pubPayload, setPubPayload] = useState('{"hello":"world","ts":0}');
   const [qos,        setQos]        = useState<0|1|2>(0);
   const [retain,     setRetain]     = useState(false);
-  const [autoScroll, setAutoScroll] = useState(true);
   const [stats,      setStats]      = useState({ recv: 0, sent: 0, errors: 0, subs: 0 });
 
   const clientRef = useRef<any>(null);
-  const logEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const el = document.createElement("style");
@@ -150,10 +146,6 @@ export default function MqttPage() {
     document.head.appendChild(el);
     return () => { document.head.removeChild(el); };
   }, []);
-
-  useEffect(() => {
-    if (autoScroll) logEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [logs, autoScroll]);
 
   const addLog = useCallback((type: LogEntry["type"], topic: string, payload: string) => {
     setLogs(prev => [...prev.slice(-199), { id: Date.now() + Math.random(), type, topic, payload, time: timestamp() }]);
@@ -227,13 +219,11 @@ export default function MqttPage() {
     });
   };
 
-  const isConnected = status === "connected";
   const statusLabel = { connected: "CONNECTED", disconnected: "DISCONNECTED", connecting: "CONNECTING…", error: "ERROR" }[status];
 
   return (
     <div className="mqtt-wrap">
       <div className="m-app">
-        {/* Header */}
         <div className="m-header">
           <div className="m-logo">◈</div>
           <div className="m-header-title">
@@ -246,130 +236,46 @@ export default function MqttPage() {
           </div>
         </div>
 
-        {/* Stats */}
-        <div className="m-stats">
-          <div className="m-stat"><div className="m-stat-val">{stats.recv}</div><div className="m-stat-label">수신</div></div>
-          <div className="m-stat"><div className="m-stat-val orange">{stats.sent}</div><div className="m-stat-label">발행</div></div>
-          <div className="m-stat"><div className="m-stat-val purple">{stats.subs}</div><div className="m-stat-label">구독</div></div>
-          <div className="m-stat"><div className="m-stat-val red">{stats.errors}</div><div className="m-stat-label">오류</div></div>
-        </div>
+        <MqttStats {...stats} />
 
-        {/* Connection */}
-        <div className="m-panel">
-          <div className="m-panel-header"><span className="icon">⬡</span> 브로커 연결</div>
-          <div className="m-conn-grid">
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-              <div className="m-field">
-                <label>Broker URL (WSS)</label>
-                <input value={broker} onChange={e => setBroker(e.target.value)} disabled={isConnected} placeholder="wss://..." />
-              </div>
-              <div className="m-field">
-                <label>Client ID</label>
-                <input value={clientId} onChange={e => setClientId(e.target.value)} disabled={isConnected} />
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: 8 }}>
-              {!isConnected
-                ? <button className="m-btn m-btn-primary" onClick={connect} disabled={status === "connecting"}>연결</button>
-                : <button className="m-btn m-btn-danger" onClick={disconnect}>해제</button>
-              }
-            </div>
-          </div>
-        </div>
+        <MqttConnection
+          broker={broker}
+          clientId={clientId}
+          status={status}
+          onBrokerChange={setBroker}
+          onClientIdChange={setClientId}
+          onConnect={connect}
+          onDisconnect={disconnect}
+        />
 
-        {/* Subscribe */}
-        <div className="m-panel">
-          <div className="m-panel-header"><span className="icon">◎</span> 토픽 구독</div>
-          <div className="m-sub-row">
-            <div className="m-field">
-              <label>Topic (# 와일드카드 지원)</label>
-              <input value={subTopic} onChange={e => setSubTopic(e.target.value)} disabled={!isConnected}
-                onKeyDown={e => e.key === "Enter" && subscribe()} placeholder="topic/# or topic/sub" />
-            </div>
-            <div className="m-field" style={{ width: 90 }}>
-              <label>QoS</label>
-              <select value={qos} onChange={e => setQos(Number(e.target.value) as 0|1|2)} disabled={!isConnected}>
-                <option value={0}>0</option><option value={1}>1</option><option value={2}>2</option>
-              </select>
-            </div>
-            <button className="m-btn m-btn-ghost" onClick={subscribe} disabled={!isConnected}>구독</button>
-          </div>
-          {subs.length > 0 && (
-            <div className="m-tag-list">
-              {subs.map(t => (
-                <div key={t} className="m-tag">{t}<button onClick={() => unsubscribe(t)}>✕</button></div>
-              ))}
-            </div>
-          )}
-        </div>
+        <MqttSubscribe
+          subTopic={subTopic}
+          subs={subs}
+          qos={qos}
+          isConnected={status === "connected"}
+          onSubTopicChange={setSubTopic}
+          onQosChange={setQos}
+          onSubscribe={subscribe}
+          onUnsubscribe={unsubscribe}
+        />
 
-        {/* Publish */}
-        <div className="m-panel">
-          <div className="m-panel-header"><span className="icon">▶</span> 메시지 발행</div>
-          <div className="m-pub-grid">
-            <div className="m-field">
-              <label>Topic</label>
-              <input value={pubTopic} onChange={e => setPubTopic(e.target.value)} disabled={!isConnected} />
-            </div>
-            <div className="m-field">
-              <label>QoS</label>
-              <select value={qos} onChange={e => setQos(Number(e.target.value) as 0|1|2)} disabled={!isConnected}>
-                <option value={0}>0</option><option value={1}>1</option><option value={2}>2</option>
-              </select>
-            </div>
-            <div className="m-field">
-              <label>Retain</label>
-              <div style={{ display: "flex", alignItems: "center", height: 36 }}>
-                <input type="checkbox" id="m-retain" checked={retain} onChange={e => setRetain(e.target.checked)} disabled={!isConnected}
-                  style={{ width: 16, height: 16, cursor: "pointer" }} />
-                <label htmlFor="m-retain" style={{ marginLeft: 6, fontSize: 12, cursor: "pointer" }}>ON</label>
-              </div>
-            </div>
-          </div>
-          <div className="m-pub-row">
-            <div className="m-field">
-              <label>Payload</label>
-              <textarea className="m-msg-input" value={pubPayload} onChange={e => setPubPayload(e.target.value)}
-                disabled={!isConnected} placeholder='{"key":"value"}' />
-            </div>
-            <button className="m-btn m-btn-accent2" style={{ alignSelf: "flex-end", padding: "10px 24px" }}
-              onClick={publish} disabled={!isConnected}>
-              발행 ▶
-            </button>
-          </div>
-        </div>
+        <MqttPublish
+          pubTopic={pubTopic}
+          pubPayload={pubPayload}
+          qos={qos}
+          retain={retain}
+          isConnected={status === "connected"}
+          onPubTopicChange={setPubTopic}
+          onPubPayloadChange={setPubPayload}
+          onQosChange={setQos}
+          onRetainChange={setRetain}
+          onPublish={publish}
+        />
 
-        {/* Log */}
-        <div className="m-panel">
-          <div className="m-panel-header"><span className="icon">≡</span> 메시지 로그</div>
-          <div className="m-log-container">
-            {logs.length === 0
-              ? <div className="m-empty-log"><div className="icon">◈</div>메시지를 기다리는 중…<br />브로커에 연결 후 토픽을 구독하세요.</div>
-              : logs.map(l => (
-                <div key={l.id} className={`m-log-item ${l.type}`}>
-                  <div className="m-log-meta">
-                    <span className="m-log-type">{l.type === "received" ? "RX" : l.type === "sent" ? "TX" : "SYS"}</span>
-                    <span className="m-log-topic">{l.topic}</span>
-                    <span className="m-log-time">{l.time}</span>
-                  </div>
-                  <span className="m-log-payload">{l.payload}</span>
-                </div>
-              ))
-            }
-            <div ref={logEndRef} />
-          </div>
-          <div className="m-log-controls">
-            <button className="m-btn m-btn-ghost" style={{ fontSize: 11, padding: "5px 12px" }}
-              onClick={() => setAutoScroll(v => !v)}>
-              {autoScroll ? "⏸ 자동스크롤 ON" : "▶ 자동스크롤 OFF"}
-            </button>
-            <button className="m-btn m-btn-ghost" style={{ fontSize: 11, padding: "5px 12px" }}
-              onClick={() => setLogs([])}>
-              ✕ 로그 초기화
-            </button>
-            <span className="m-log-count">{logs.length} / 200 msgs</span>
-          </div>
-        </div>
+        <MqttMessageLog
+          logs={logs}
+          onClearLogs={() => setLogs([])}
+        />
       </div>
     </div>
   );

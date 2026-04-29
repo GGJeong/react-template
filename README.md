@@ -1,46 +1,61 @@
-# Getting Started with Create React App
+## 📁 프로젝트 구조
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
-## Available Scripts
-
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
-
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
-
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
+```
+src/
+├── App.tsx                          # 페이지 라우팅 진입점
+├── index.tsx                        # React 앱 마운트
+│
+├── api/                             # API 레이어
+│   ├── generated/                   # swagger-typescript-api로 자동 생성된 API 코드
+│   └── instance/
+│       └── axiosInstance.ts         # Axios 공통 인스턴스 및 인터셉터 설정
+│
+├── features/                        # 기능(도메인)별 모듈
+│   │                                # 각 기능에 필요한 모든 파일을 해당 폴더 안에서 관리
+│   │
+│   ├── dashboard/                   # 대시보드 기능
+│   │   ├── components/              # 대시보드 UI 컴포넌트
+│   │   │   └── DashboardPage.tsx    # 통계 카드 및 최근 주문 목록 페이지
+│   │   ├── hooks/                   # 대시보드 전용 커스텀 훅
+│   │   │   └── useDashboard.ts      # 대시보드 데이터 fetching 및 상태 관리
+│   │   ├── services/                # 대시보드 API 호출 함수
+│   │   │   └── dashboardService.ts  # fetchDashboardData (목업 → 실 API 교체 예정)
+│   │   └── types/                   # 대시보드 전용 타입 정의
+│   │       └── index.ts             # StatCard, RecentOrder, DashboardData
+│   │
+│   ├── mqtt/                        # MQTT 클라이언트 기능
+│   │   └── components/              # MQTT UI 컴포넌트
+│   │       └── MqttPage.tsx         # 브로커 연결, 구독, 발행, 메시지 로그
+│   │
+│   └── auth/                        # 인증 기능
+│       ├── components/              # 로그인 폼 등 인증 관련 컴포넌트 (추가 예정)
+│       └── store/                   # 인증 상태 관리
+│           └── authStore.ts         # AuthContext, useAuth 훅
+│
+└── shared/                          # 기능 간 공유 모듈
+    │                                # features/ 폴더끼리 직접 참조 대신 이곳을 통해 공유
+    │
+    ├── components/
+    │   ├── ui/                      # 재사용 가능한 기본 UI 컴포넌트
+    │   │   ├── Button.tsx           # variant(primary/secondary/danger), size(sm/md/lg) 지원
+    │   │   └── Card.tsx             # 공통 카드 레이아웃 컨테이너
+    │   └── layout/                  # 앱 전체 레이아웃 골격
+    │       ├── Header.tsx           # 상단 헤더 (검색, 알림, 프로필)
+    │       ├── Sidebar.tsx          # 좌측 내비게이션 메뉴
+    │       └── MainLayout.tsx       # Header + Sidebar + 콘텐츠 영역 조합
+    │
+    ├── hooks/                       # 공통 커스텀 훅 (추가 예정)
+    │
+    ├── utils/                       # 공통 유틸리티 함수
+    │   └── formatDate.ts            # formatDate (날짜 포맷), formatCurrency (원화 포맷)
+    │
+    ├── constants/                   # 앱 전역 상수
+    │   └── routes.ts                # ROUTES 객체 (페이지 경로 상수 모음)
+    │
+    ├── types/                       # 전역 공통 타입 (추가 예정)
+    │
+    └── assets/                      # 정적 리소스
+        ├── icons/                   # SVG 아이콘 컴포넌트 (IconBell, IconSearch 등)
+        ├── images/                  # 이미지 파일 (logo.svg, placeholder.svg)
+        └── fonts/                   # 폰트 CSS
+```
