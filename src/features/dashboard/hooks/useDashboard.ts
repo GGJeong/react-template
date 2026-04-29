@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { fetchDashboardData } from "../services/dashboardService";
-import { DashboardData } from "../types/dashboard";
+import { DashboardData } from "../types";
 
 export const useDashboard = () => {
   const [data, setData] = useState<DashboardData | null>(null);

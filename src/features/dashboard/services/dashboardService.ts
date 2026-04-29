@@ -1,7 +1,7 @@
-import { DashboardData } from "../types/dashboard";
+import { DashboardData } from "../types";
 
 // 실제 프로젝트에서는 generated API로 교체
-// import { Dashboard } from "../api/generated/Dashboard";
+// import { Dashboard } from "../../../api/generated/Dashboard";
 
 export const fetchDashboardData = async (): Promise<DashboardData> => {
   // 목업 데이터 (API 연동 전 개발용)

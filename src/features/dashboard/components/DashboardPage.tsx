@@ -1,8 +1,8 @@
 import React from "react";
-import Card from "../components/common/Card";
+import Card from "../../../shared/components/ui/Card";
 import { useDashboard } from "../hooks/useDashboard";
-import { RecentOrder, StatCard } from "../types/dashboard";
-import { formatCurrency, formatDate } from "../utils/formatDate";
+import { RecentOrder, StatCard } from "../types";
+import { formatCurrency, formatDate } from "../../../shared/utils/formatDate";
 
 const statusColor: Record<RecentOrder["status"], { bg: string; text: string }> = {
   completed: { bg: "#dcfce7", text: "#16a34a" },
