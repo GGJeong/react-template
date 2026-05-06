@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { LogEntry } from "../types";
-import MqttStats from "../components/MqttStats";
-import MqttConnection from "../components/MqttConnection";
-import MqttSubscribe from "../components/MqttSubscribe";
-import MqttPublish from "../components/MqttPublish";
-import MqttMessageLog from "../components/MqttMessageLog";
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { LogEntry } from '../types';
+import MqttStats from '../components/MqttStats';
+import MqttConnection from '../components/MqttConnection';
+import MqttSubscribe from '../components/MqttSubscribe';
+import MqttPublish from '../components/MqttPublish';
+import MqttMessageLog from '../components/MqttMessageLog';
 
 declare global {
   interface Window {
@@ -12,9 +12,9 @@ declare global {
   }
 }
 
-const MQTT_CDN = "https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.10.1/mqtt.min.js";
-const DEFAULT_BROKER = "wss://broker.hivemq.com:8884/mqtt";
-const DEFAULT_TOPIC = "claude/mqtt/demo";
+const MQTT_CDN = 'https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.10.1/mqtt.min.js';
+const DEFAULT_BROKER = 'wss://broker.hivemq.com:8884/mqtt';
+const DEFAULT_TOPIC = 'claude/mqtt/demo';
 const CLIENT_ID = `claude-client-${Math.random().toString(16).slice(2, 8)}`;
 
 const css = `
@@ -111,13 +111,13 @@ const css = `
 `;
 
 function timestamp() {
-  return new Date().toLocaleTimeString("ko-KR", { hour12: false });
+  return new Date().toLocaleTimeString('ko-KR', { hour12: false });
 }
 
 function loadMqttScript(): Promise<void> {
   return new Promise((resolve, reject) => {
     if (window.mqtt) return resolve();
-    const s = document.createElement("script");
+    const s = document.createElement('script');
     s.src = MQTT_CDN;
     s.onload = () => resolve();
     s.onerror = reject;
@@ -126,51 +126,64 @@ function loadMqttScript(): Promise<void> {
 }
 
 export default function MqttPage() {
-  const [broker,     setBroker]     = useState(DEFAULT_BROKER);
-  const [clientId,   setClientId]   = useState(CLIENT_ID);
-  const [status,     setStatus]     = useState<"disconnected"|"connecting"|"connected"|"error">("disconnected");
-  const [logs,       setLogs]       = useState<LogEntry[]>([]);
-  const [subTopic,   setSubTopic]   = useState(DEFAULT_TOPIC);
-  const [subs,       setSubs]       = useState<string[]>([]);
-  const [pubTopic,   setPubTopic]   = useState(DEFAULT_TOPIC);
+  const [broker, setBroker] = useState(DEFAULT_BROKER);
+  const [clientId, setClientId] = useState(CLIENT_ID);
+  const [status, setStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>(
+    'disconnected',
+  );
+  const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [subTopic, setSubTopic] = useState(DEFAULT_TOPIC);
+  const [subs, setSubs] = useState<string[]>([]);
+  const [pubTopic, setPubTopic] = useState(DEFAULT_TOPIC);
   const [pubPayload, setPubPayload] = useState('{"hello":"world","ts":0}');
-  const [qos,        setQos]        = useState<0|1|2>(0);
-  const [retain,     setRetain]     = useState(false);
-  const [stats,      setStats]      = useState({ recv: 0, sent: 0, errors: 0, subs: 0 });
+  const [qos, setQos] = useState<0 | 1 | 2>(0);
+  const [retain, setRetain] = useState(false);
+  const [stats, setStats] = useState({ recv: 0, sent: 0, errors: 0, subs: 0 });
 
   const clientRef = useRef<any>(null);
 
   useEffect(() => {
-    const el = document.createElement("style");
+    const el = document.createElement('style');
     el.textContent = css;
     document.head.appendChild(el);
-    return () => { document.head.removeChild(el); };
+    return () => {
+      document.head.removeChild(el);
+    };
   }, []);
 
-  const addLog = useCallback((type: LogEntry["type"], topic: string, payload: string) => {
-    setLogs(prev => [...prev.slice(-199), { id: Date.now() + Math.random(), type, topic, payload, time: timestamp() }]);
+  const addLog = useCallback((type: LogEntry['type'], topic: string, payload: string) => {
+    setLogs((prev) => [
+      ...prev.slice(-199),
+      { id: Date.now() + Math.random(), type, topic, payload, time: timestamp() },
+    ]);
   }, []);
 
   const connect = async () => {
-    setStatus("connecting");
+    setStatus('connecting');
     try {
       await loadMqttScript();
       const client = window.mqtt.connect(broker, { clientId, clean: true, reconnectPeriod: 0 });
       clientRef.current = client;
-      client.on("connect", () => { setStatus("connected"); addLog("system", "—", `브로커 연결됨: ${broker}`); });
-      client.on("message", (topic: string, message: Buffer) => {
-        addLog("received", topic, message.toString());
-        setStats(s => ({ ...s, recv: s.recv + 1 }));
+      client.on('connect', () => {
+        setStatus('connected');
+        addLog('system', '—', `브로커 연결됨: ${broker}`);
       });
-      client.on("error", (err: Error) => {
-        setStatus("error");
-        addLog("system", "—", `오류: ${err.message}`);
-        setStats(s => ({ ...s, errors: s.errors + 1 }));
+      client.on('message', (topic: string, message: Buffer) => {
+        addLog('received', topic, message.toString());
+        setStats((s) => ({ ...s, recv: s.recv + 1 }));
       });
-      client.on("close", () => { setStatus("disconnected"); addLog("system", "—", "연결 해제됨"); });
+      client.on('error', (err: Error) => {
+        setStatus('error');
+        addLog('system', '—', `오류: ${err.message}`);
+        setStats((s) => ({ ...s, errors: s.errors + 1 }));
+      });
+      client.on('close', () => {
+        setStatus('disconnected');
+        addLog('system', '—', '연결 해제됨');
+      });
     } catch (e: any) {
-      setStatus("error");
-      addLog("system", "—", `MQTT 라이브러리 로드 실패: ${e.message}`);
+      setStatus('error');
+      addLog('system', '—', `MQTT 라이브러리 로드 실패: ${e.message}`);
     }
   };
 
@@ -178,7 +191,7 @@ export default function MqttPage() {
     clientRef.current?.end(true);
     clientRef.current = null;
     setSubs([]);
-    setStats(s => ({ ...s, subs: 0 }));
+    setStats((s) => ({ ...s, subs: 0 }));
   };
 
   const subscribe = () => {
@@ -186,20 +199,20 @@ export default function MqttPage() {
     if (!t || !clientRef.current || subs.includes(t)) return;
     clientRef.current.subscribe(t, { qos }, (err: Error) => {
       if (err) {
-        addLog("system", t, `구독 실패: ${err.message}`);
+        addLog('system', t, `구독 실패: ${err.message}`);
       } else {
-        setSubs(prev => [...prev, t]);
-        setStats(s => ({ ...s, subs: s.subs + 1 }));
-        addLog("system", t, `구독 시작 (QoS ${qos})`);
+        setSubs((prev) => [...prev, t]);
+        setStats((s) => ({ ...s, subs: s.subs + 1 }));
+        addLog('system', t, `구독 시작 (QoS ${qos})`);
       }
     });
   };
 
   const unsubscribe = (t: string) => {
     clientRef.current?.unsubscribe(t, () => {
-      setSubs(prev => prev.filter(s => s !== t));
-      setStats(s => ({ ...s, subs: Math.max(0, s.subs - 1) }));
-      addLog("system", t, "구독 해제됨");
+      setSubs((prev) => prev.filter((s) => s !== t));
+      setStats((s) => ({ ...s, subs: Math.max(0, s.subs - 1) }));
+      addLog('system', t, '구독 해제됨');
     });
   };
 
@@ -207,19 +220,28 @@ export default function MqttPage() {
     const t = pubTopic.trim();
     if (!t || !clientRef.current) return;
     let payload = pubPayload;
-    try { const obj = JSON.parse(payload); obj.ts = Date.now(); payload = JSON.stringify(obj); } catch (_) {}
+    try {
+      const obj = JSON.parse(payload);
+      obj.ts = Date.now();
+      payload = JSON.stringify(obj);
+    } catch (_) {}
     clientRef.current.publish(t, payload, { qos, retain }, (err: Error) => {
       if (err) {
-        addLog("system", t, `발행 실패: ${err.message}`);
-        setStats(s => ({ ...s, errors: s.errors + 1 }));
+        addLog('system', t, `발행 실패: ${err.message}`);
+        setStats((s) => ({ ...s, errors: s.errors + 1 }));
       } else {
-        addLog("sent", t, payload);
-        setStats(s => ({ ...s, sent: s.sent + 1 }));
+        addLog('sent', t, payload);
+        setStats((s) => ({ ...s, sent: s.sent + 1 }));
       }
     });
   };
 
-  const statusLabel = { connected: "CONNECTED", disconnected: "DISCONNECTED", connecting: "CONNECTING…", error: "ERROR" }[status];
+  const statusLabel = {
+    connected: 'CONNECTED',
+    disconnected: 'DISCONNECTED',
+    connecting: 'CONNECTING…',
+    error: 'ERROR',
+  }[status];
 
   return (
     <div className="mqtt-wrap">
@@ -231,7 +253,7 @@ export default function MqttPage() {
             <p>WebSocket · MQTT over WSS · Real-time messaging</p>
           </div>
           <div className={`m-status-badge ${status}`}>
-            <div className={`m-dot ${status === "connecting" ? "blink" : ""}`} />
+            <div className={`m-dot ${status === 'connecting' ? 'blink' : ''}`} />
             {statusLabel}
           </div>
         </div>
@@ -252,7 +274,7 @@ export default function MqttPage() {
           subTopic={subTopic}
           subs={subs}
           qos={qos}
-          isConnected={status === "connected"}
+          isConnected={status === 'connected'}
           onSubTopicChange={setSubTopic}
           onQosChange={setQos}
           onSubscribe={subscribe}
@@ -264,7 +286,7 @@ export default function MqttPage() {
           pubPayload={pubPayload}
           qos={qos}
           retain={retain}
-          isConnected={status === "connected"}
+          isConnected={status === 'connected'}
           onPubTopicChange={setPubTopic}
           onPubPayloadChange={setPubPayload}
           onQosChange={setQos}
@@ -272,10 +294,7 @@ export default function MqttPage() {
           onPublish={publish}
         />
 
-        <MqttMessageLog
-          logs={logs}
-          onClearLogs={() => setLogs([])}
-        />
+        <MqttMessageLog logs={logs} onClearLogs={() => setLogs([])} />
       </div>
     </div>
   );

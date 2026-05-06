@@ -11,7 +11,7 @@ export interface RecentOrder {
   customer: string;
   product: string;
   amount: number;
-  status: "completed" | "pending" | "cancelled";
+  status: 'completed' | 'pending' | 'cancelled';
   date: string;
 }
 

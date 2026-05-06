@@ -1,11 +1,11 @@
-import React from "react";
+import React from 'react';
 
 interface IconProps {
   size?: number;
   color?: string;
 }
 
-const IconSearch: React.FC<IconProps> = ({ size = 20, color = "currentColor" }) => (
+const IconSearch: React.FC<IconProps> = ({ size = 20, color = 'currentColor' }) => (
   <svg
     width={size}
     height={size}

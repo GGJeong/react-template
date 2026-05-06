@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { fetchDashboardData } from "../services/dashboardService";
-import { DashboardData } from "../types";
+import { useEffect, useState } from 'react';
+import { fetchDashboardData } from '../services/dashboardService';
+import { DashboardData } from '../types';
 
 export const useDashboard = () => {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -10,7 +10,7 @@ export const useDashboard = () => {
   useEffect(() => {
     fetchDashboardData()
       .then(setData)
-      .catch(() => setError("데이터를 불러오지 못했습니다."))
+      .catch(() => setError('데이터를 불러오지 못했습니다.'))
       .finally(() => setLoading(false));
   }, []);
 
